@@ -1,0 +1,26 @@
+# NeuroFence — Python dependencies
+# Tested on Python 3.13 (Windows)
+# Install: pip install -r requirements.txt
+
+# ── Core ML ──────────────────────────────────────────────────────────────
+torch==2.13.0
+transformers==5.16.1
+safetensors==0.8.0
+
+# ── Data / numerics ──────────────────────────────────────────────────────
+numpy==2.5.2
+pandas==3.0.5
+
+# ── Visualisation ────────────────────────────────────────────────────────
+matplotlib==3.11.1
+
+# ── Desktop GUI ───────────────────────────────────────────────────────────
+PyQt6==6.11.0
+
+# ── Reporting ────────────────────────────────────────────────────────────
+reportlab==5.0.1
+
+# ── Web backend ──────────────────────────────────────────────────────────
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.5

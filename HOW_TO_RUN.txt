@@ -1,0 +1,232 @@
+================================================================================
+  NeuroFence — LLM Weight Poisoning & Backdoor Scanner
+  HOW TO RUN
+================================================================================
+
+REQUIREMENTS
+------------
+  - Python 3.10 – 3.13  (tested on 3.13.3)
+  - Node.js 18 or higher  (only needed for the web UI)
+  - Git (optional, for cloning)
+  - ~2 GB free RAM for Qwen2.5-0.5B; ~4 GB for TinyLlama-1B
+
+LIBRARY VERSIONS (as tested)
+  torch 2.13.0  |  transformers 5.16.1  |  safetensors 0.8.0
+  numpy 2.5.2   |  pandas 3.0.5         |  matplotlib 3.11.1
+  PyQt6 6.11.0  |  reportlab 5.0.1
+  fastapi 0.141.1  |  uvicorn 0.52.4    |  pydantic 2.13.5
+
+SUPPORTED MODELS (included)
+  - Qwen2.5-0.5B  →  neurofence\models\qwen2.5-0.5b\  (weights included)
+  - TinyLlama-1B  →  neurofence\models\tinyllama-1b\   (weights NOT included,
+                      tokenizer only — see download instructions below)
+
+
+────────────────────────────────────────────────────────────────────────────────
+  PART 1 — PYTHON ENVIRONMENT SETUP  (one-time)
+────────────────────────────────────────────────────────────────────────────────
+
+  1. Open a terminal in the project root:
+       cd "d:\PROJECTS\Project-2--NeuroFence--LLM-Weight-Poisoning-and-Backdoor-Scanner"
+
+  2. Create a virtual environment:
+       python -m venv .venv
+
+  3. Activate it:
+       Windows CMD:        .venv\Scripts\activate.bat
+       Windows PowerShell: .venv\Scripts\Activate.ps1
+       Linux / macOS:      source .venv/bin/activate
+
+  4. Install Python dependencies:
+       pip install -r requirements.txt
+
+     NOTE: PyTorch may take a few minutes to download.
+     If you have an NVIDIA GPU and want CUDA acceleration, follow the
+     instructions at https://pytorch.org/get-started/locally/ before
+     running the line above.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  PART 2 — OPTION A: DESKTOP APPLICATION  (PyQt6 GUI)
+────────────────────────────────────────────────────────────────────────────────
+
+  With the virtual environment activated:
+
+       python app.py
+
+  Workflow inside the app:
+    1. Click "📂 Load Model"  → select a local Hugging Face model folder
+       (the included TinyLlama-1B folder is at  neurofence\models\tinyllama-1b)
+    2. Click "▶ Run Scan"    → wait for the progress bar to complete
+    3. Review the Layer Anomaly table and heatmap
+    4. Click "📄 Export PDF" → saves neurofence_report.pdf in output\
+    5. Click "📐 Save Baseline" → saves the current scan as the reference
+       baseline for future comparative scans
+
+
+────────────────────────────────────────────────────────────────────────────────
+  PART 3 — OPTION B: WEB APPLICATION  (FastAPI backend + React frontend)
+────────────────────────────────────────────────────────────────────────────────
+
+  Terminal 1 — start the Python backend
+  ───────────────────────────────────────
+  (activate .venv first)
+
+       cd "d:\PROJECTS\Project-2--NeuroFence--LLM-Weight-Poisoning-and-Backdoor-Scanner"
+       uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  The API will be available at:
+       http://localhost:8000
+  Interactive docs (Swagger UI):
+       http://localhost:8000/docs
+
+
+  Terminal 2 — install and start the React frontend
+  ──────────────────────────────────────────────────
+  (Node.js must be installed)
+
+       cd "d:\PROJECTS\Project-2--NeuroFence--LLM-Weight-Poisoning-and-Backdoor-Scanner\frontend"
+       npm install
+       npm run dev
+
+  Open your browser at:
+       http://localhost:3000
+
+  Workflow in the web UI:
+    1. Enter the absolute path to a local HF model folder
+    2. Adjust "Prompts Generated" (how many the fuzzer creates) and
+       "Prompts Scanned" (how many are actually run through the model)
+    3. Click "Run Scan" — progress updates every 2 seconds automatically
+    4. When complete:
+       - View the Risk Score badge and model info
+       - Inspect the activation heatmap
+       - Sort/browse the Layer Anomaly table
+       - Download the PDF forensic report
+       - Save the scan as a baseline for future comparisons
+
+
+────────────────────────────────────────────────────────────────────────────────
+  OUTPUT FILES
+────────────────────────────────────────────────────────────────────────────────
+
+  All outputs are written to the  output/  folder (created automatically):
+
+  Desktop mode:
+    output\records.json            — raw activation records
+    output\summary.csv             — layer-wise anomaly summary
+    output\heatmap.png             — activation heatmap
+    output\neurofence_report.pdf   — forensic PDF report
+
+  Web mode (one sub-folder per job):
+    output\<job-id>\records.json
+    output\<job-id>\summary.csv
+    output\<job-id>\heatmap.png
+    output\<job-id>\neurofence_report.pdf
+
+
+────────────────────────────────────────────────────────────────────────────────
+  INCLUDED MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+  ✅ Qwen2.5-0.5B  (weights INCLUDED — ready to use)
+       neurofence\models\qwen2.5-0.5b\
+       Use this path in the desktop app or web UI.
+
+  ⚠  TinyLlama-1B  (tokenizer only — weights NOT included)
+       neurofence\models\tinyllama-1b\
+       To download the ~2 GB weights file:
+
+         pip install huggingface_hub
+         python -c "from huggingface_hub import snapshot_download; snapshot_download('TinyLlama/TinyLlama-1.1B-Chat-v1.0', local_dir='neurofence/models/tinyllama-1b', local_dir_use_symlinks=False)"
+
+  You can also supply any other local Hugging Face model folder that contains:
+       config.json
+       tokenizer.json  (or tokenizer.model)
+       model.safetensors  (or pytorch_model.bin)
+
+
+────────────────────────────────────────────────────────────────────────────────
+  COMMON ISSUES
+────────────────────────────────────────────────────────────────────────────────
+
+  "ModuleNotFoundError: No module named 'PyQt6'"
+      → Make sure you activated the virtual environment and ran pip install.
+
+  "ModuleNotFoundError: No module named 'fastapi'"
+      → Run: pip install fastapi uvicorn pydantic
+
+  "[transformers] torch_dtype is deprecated"
+      → Informational warning only in older code. Current code uses dtype= 
+        (correct for transformers >= 5.x). Safe to ignore if you see it.
+
+  "FileNotFoundError: Model directory not found"
+      → Check the path is absolute and the folder contains config.json.
+        Use Qwen2.5-0.5B which is already included with weights.
+
+  "OSError: Error no file named model.safetensors"
+      → The TinyLlama folder only has the tokenizer. Download the weights
+        (see INCLUDED MODELS section above) or use Qwen2.5-0.5B instead.
+
+  "CUDA out of memory"
+      → Qwen2.5-0.5B and TinyLlama-1B both run fine on CPU (no GPU needed).
+        The sandbox auto-selects CPU when CUDA is unavailable.
+
+  Heatmap is blank / PDF has no chart
+      → Run a scan first. At least one prompt must complete successfully.
+
+  Web UI shows "Failed to start scan"
+      → Make sure the FastAPI backend is running on port 8000.
+
+  npm command not found
+      → Install Node.js from https://nodejs.org (LTS version recommended).
+
+
+────────────────────────────────────────────────────────────────────────────────
+  PROJECT STRUCTURE
+────────────────────────────────────────────────────────────────────────────────
+
+  NeuroFence/
+  ├── app.py                    Desktop app entry point
+  ├── requirements.txt          Python dependencies (pinned)
+  ├── HOW_TO_RUN.txt            This file
+  ├── README.md                 Project overview
+  ├── data/
+  │   └── baseline.json         Baseline activation records (empty until saved)
+  ├── output/                   Generated scan outputs
+  ├── assets/                   UI assets (icons etc.)
+  ├── neurofence/               Core Python package
+  │   ├── __init__.py
+  │   ├── sandbox.py            Safe model loader
+  │   ├── fuzzer.py             Adversarial prompt generator
+  │   ├── tracker.py            PyTorch hook-based activation tracker
+  │   ├── detector.py           Anomaly scoring engine
+  │   ├── reporter.py           PDF report builder
+  │   └── utils.py              Shared utilities
+  ├── ui/                       PyQt6 desktop UI modules
+  │   ├── main_window.py        Main application window
+  │   ├── models.py             Qt table model for Pandas DataFrames
+  │   └── heatmap.py            Matplotlib heatmap renderer
+  ├── backend/                  FastAPI web backend
+  │   ├── main.py               API routes + background scan worker
+  │   └── requirements.txt      Web-only extra dependencies
+  └── frontend/                 React web UI
+      ├── package.json
+      ├── vite.config.js
+      ├── tailwind.config.js
+      ├── index.html
+      └── src/
+          ├── main.jsx
+          ├── App.jsx
+          ├── api.js
+          ├── index.css
+          └── components/
+              ├── Header.jsx
+              ├── ScanForm.jsx
+              ├── StatusBanner.jsx
+              ├── RiskBadge.jsx
+              ├── ModelInfoCard.jsx
+              ├── HeatmapPanel.jsx
+              ├── SummaryTable.jsx
+              └── LogPanel.jsx
+
+================================================================================
